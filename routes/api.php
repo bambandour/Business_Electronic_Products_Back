@@ -34,6 +34,8 @@ Route::group(['prefix' => 'breukh'], function () {
 
     Route::get('/product/search/{code}', [ProduitController::class, 'searchProduct'])->name('product.search');
 
+    Route::get('/succursales/{id}/search/{code}', [ProduitController::class, 'search'])->name('product.searchwithFreind');;
+
     Route::post('/product', [ProduitController::class, 'store'])->name('product.store');
 
     Route::put('/product/{id}', [ProduitController::class, 'update'])->name('product.update');
