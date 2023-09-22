@@ -14,6 +14,14 @@ class CommandeResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            "id"=>$this->id,
+            "montant"=>$this->montant,
+            "reduction"=>$this->reduction,
+            "client"=>$this->client_id,
+            "utilisateur"=>$this->user_id,
+            "commandes"=>ProduitCommandeResource::collection($this->produit_commandes),
+            // "id"=>$this->produit_commandes[0]->pivot->produit_succursale_id,
+        ];
     }
 }

@@ -32,7 +32,7 @@ Route::group(['prefix' => 'breukh'], function () {
 Route::group(['prefix' => 'breukh'], function () {
     Route::get('/products', [ProduitController::class, 'index'])->name('product.index');
 
-    Route::get('/product/search', [ProduitController::class, 'searchProduct'])->name('product.search');
+    Route::get('/product/search/{code}', [ProduitController::class, 'searchProduct'])->name('product.search');
 
     Route::post('/product', [ProduitController::class, 'store'])->name('product.store');
 

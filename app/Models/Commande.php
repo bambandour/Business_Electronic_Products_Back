@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Commande extends Model
 {
@@ -11,7 +12,13 @@ class Commande extends Model
 
     public $guarded=['id'];
     public function produit_commandes(){
-        return $this->belongsToMany(ProduitSuccursale::class,'produit_commandes','commande_id','produit_succursale_id')
+        return $this->belongsToMany(ProduitSuccursale::class,'produit_commandes')
                         ->withPivot('quantite','prix','remise');
     }
+
+    public function paiement():HasMany
+    {
+        return $this->hasMany(Paiement::class);
+    }
+    
 }

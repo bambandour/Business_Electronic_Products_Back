@@ -15,11 +15,13 @@ class ProduitSuccursaleResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            // "id"=>$this->id,
+            "succursale_id"=>$this->id,
             "quantite"=>$this->pivot->quantite,
             "prix"=>$this->pivot->prix,
-            "prixEnGros"=>$this->pivot->prixEnGros,
-            "succursale"=>$this->libelle
+            "prixEnGros"=>$this->pivot->prixEnGros,       
+            "succursale"=>$this->libelle,
+            "produit_succursale_id"=>$this->pivot->id
+
         ];
     }
 }

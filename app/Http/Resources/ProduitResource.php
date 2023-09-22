@@ -22,7 +22,7 @@ class ProduitResource extends JsonResource
             "description"=>$this->description,
             "caracteristiques"=>CaracteristiqueProduitResource::collection($this->caracteristiques),
             // "quantite"=>$this->produit_succursales[0]->pivot->quantite,
-            "details"=>ProduitSuccursaleResource::collection($this->produit_succursales),
+            "succursales"=>ProduitSuccursaleResource::collection($this->produit_succursales),
         ];
     }
 }
