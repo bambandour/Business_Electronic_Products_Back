@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class CaracteristiqueResource extends JsonResource
+class UserResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,8 +16,11 @@ class CaracteristiqueResource extends JsonResource
     {
         return [
             "id"=>$this->id,
-            "libelle"=>$this->libelle,
-            "valeurs"=>$this->valeurs,
+            "login"=>$this->login,
+            "nomComplet"=>$this->nomComplet,
+            "telephone"=>$this->telephone,
+            "succursale_id"=>$this->succursale->id,
+            "succursale"=>$this->succursale->libelle
         ];
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CaracteristiqueController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\ProduitController;
@@ -30,11 +31,15 @@ Route::group(['prefix' => 'breukh'], function () {
 });
 
 Route::group(['prefix' => 'breukh'], function () {
-    Route::get('/products', [ProduitController::class, 'index'])->name('product.index');
+    Route::get('/products', [ProduitController::class, 'index'])->name('product.all');
+
+    Route::get('/all', [ProduitController::class, 'all'])->name('all');
 
     Route::get('/product/search/{code}', [ProduitController::class, 'searchProduct'])->name('product.search');
 
-    Route::get('/succursales/{id}/search/{code}', [ProduitController::class, 'search'])->name('product.searchwithFreind');;
+    Route::get('/succursales/{id}/search/{code}', [ProduitController::class, 'search'])->name('product.searchwithFreind');
+
+    Route::get('/succursales/{id}/products', [ProduitController::class, 'showProductBySuccursale'])->name('product.showProductBySuccursale');
 
     Route::post('/product', [ProduitController::class, 'store'])->name('product.store');
 
@@ -76,8 +81,15 @@ Route::group(['prefix' => 'breukh'], function () {
     Route::delete('/commande/{id}', [CommandeController::class, 'destroy'])->name('commandes.destroy');
 
 });
-
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['prefix' => 'breukh'], function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
 });
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('breukh/user', [AuthController::class, 'user']);
+    Route::post('breukh/logout', [AuthController::class, 'logout']);
+});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });

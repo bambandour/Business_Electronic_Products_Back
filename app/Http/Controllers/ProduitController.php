@@ -2,7 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CaracteristiqueResource;
+use App\Http\Resources\CategorieResource;
+use App\Http\Resources\MarqueResource;
 use App\Http\Resources\ProduitResource;
+use App\Models\Caracteristique;
+use App\Models\Categorie;
+use App\Models\Marque;
 use App\Models\Produit;
 use App\Models\Succursale;
 use Illuminate\Http\Request;
@@ -17,6 +23,17 @@ class ProduitController extends Controller
         $suc=Produit::all(); 
         return ProduitResource::collection($suc);
     }
+    public function all(){
+        $marques =Marque::all();
+        $categories =Categorie::all();
+        $caracteristiques =Caracteristique::all();
+        // $produits=Produit::all();
+        return [
+            "marques"=>MarqueResource::collection($marques) ,
+            "categories"=> CategorieResource::collection($categories),
+            "caracteristiques"=>CaracteristiqueResource::collection($caracteristiques),
+        ];
+    }
     public function store(Request $request){
         DB::beginTransaction();
         try{
@@ -30,10 +47,12 @@ class ProduitController extends Controller
             "libelle"=>$request->libelle,
             "code"=>$request->code,
             "photo"=>$filename,
-            "description"=>$request->description
+            "description"=>$request->description,
+            "marque_id"=>$request->marque,
+            "categorie_id"=>$request->categorie
         ]);
-
-        $produit->produit_succursales()->attach($request->succursales);
+        
+        $produit->produits()->attach($request->succursales);
 
         $produit->caracteristiques()->attach($request->caracteristiques);
 
@@ -50,19 +69,19 @@ class ProduitController extends Controller
     public function searchProduct($productCode) {
         try {
             
-            $localProduct= Produit::where('code',"$productCode")
-            ->with(['produit_succursales'=> function($query){
-                $query->where('succursale_id',1)
-                ->where('quantite', '>', 0);
-            }])->first();
+            // $localProduct= Produit::where('code',"$productCode")
+            // ->with(['produits'=> function($query){
+            //     $query->where('succursale_id',1)
+            //     ->where('quantite', '>', 0);
+            // }])->first();
             //  return $localProduct;
 
-            // $localProduct = Produit::where('code', $productCode)
-            //     ->whereHas('produit_succursales', function ($query) {
-            //         $query->where('succursale_id', 1)
-            //     ->where('quantite', '>', 0);
-            //     })
-            //     ->first();
+            $localProduct = Produit::where('code', $productCode)
+                ->whereHas('produits', function ($query) {
+                    $query->where('succursale_id', 1)
+                ->where('quantite', '>', 0);
+                })
+                ->first();
 
             // $localProduct = Produit::where('code', 'like', "$productCode")->bySuccursale(1)->with('produit_succursales')
             //     ->first();
@@ -82,14 +101,15 @@ class ProduitController extends Controller
 
                 whereHas('relations', function($query) {
                     $query->where('estAmis', true)
-                          ->where('demandeur_id', 1);
+                          ->where('succursale_id', 1)
+                          ->orWhere('demandeur_id', 1);
                 })->pluck('id')->toArray();
                 
                 $amieProducts = Produit::where('code', $productCode)
                 // ->with(['produit_succursales', function($query)use($amieSuccursales){
                 //     $query->whereIn('succursale_id', $amieSuccursales);
                 // }])->get();
-                ->whereHas('produit_succursales', function($query) use ($amieSuccursales) {
+                ->whereHas('produits', function($query) use ($amieSuccursales) {
                     $query->whereIn('succursale_id', $amieSuccursales);
                 })
                 ->get();
@@ -106,32 +126,61 @@ class ProduitController extends Controller
         }
     }
 
-    public function search(string $id, string $code)
-    {
+    public function search($id, string $code){
+        try {
         $limit = request()->query('limit');
 
         $produit = Produit::where("code", $code)->first();
         if (!$produit) {
-            return response(["message" => "code introuvable"], Response::HTTP_NOT_FOUND);
+            return $this->formatResponse(' le code du produit est introuvable', [], false,Response::HTTP_NOT_FOUND);
         }
-        $hisProduit = DB::table('produit_succursales')->where(['succursale_id' => $id, "produit_id" => $produit->id])->where('quantite', '>', 0)->first();
+        $hisProduit = DB::table('produits')->where(['succursale_id' => $id, "produit_id" => $produit->id])->where('quantite', '>', 0)->first();
         if (!$hisProduit){
-            $ids = Succursale::myFriends($id)->map(function ($a) {
-                return $a->id;
+            $tab=[];
+            $ids = Succursale::myFriends($id)->map(function ($a)use($tab ,$id) {
+                if($a->demandeur_id!==$id){
+                    return  $tab[]=$a->succursale_id;
+                }
+                
+                if($a->succursale_id!==$id){
+                    return $tab[]=$a->demandeur_id;  
+                }
+                return $tab;
             });
-            
-            // $produit = Produit::with(['succursales' => function ($q) use ($ids, $limit) {
-            //     $q->whereIn('succursale_id', $ids)->where('quantite', ">", 0)->orderBy('prix_gros', "asc")
-            //         ->when($limit, fn ($q) => $q->limit($limit));
-            // }, 'caracteristiques'])->where('code', $code)->first();
-            
-            $produit = Produit::quantitePositive($ids,$limit , $code)->first();
-            return $produit;
+            // return $ids;
+                $produit = Produit::quantitePositive($ids,$limit , $code)->first();
+                return ProduitResource::make($produit);
+            }
+            $produit = Produit::with(['produits' => function ($q) use ($id) {
+                $q->where('succursale_id', $id);
+            }, 'caracteristiques'])->where('code', $code)->first();
+        } catch (\Exception $e) {
+        
         }
-        $produit = Produit::with(['produit_succursales' => function ($q) use ($id) {
-            $q->where('succursale_id', $id);
-        }, 'caracteristiques'])->where('code', $code)->first();
-        return $produit;
+        return ProduitResource::make($produit);
+        
     }
+
+    // public function showProductBySuccursale($succursaleId){
+    //     $produit = Produit::with(['produits' => function ($query) use ($succursaleId) {
+    //         $query->where('succursale_id', $succursaleId);
+    //     }])->get();
+    //     return ProduitResource::collection($produit);
+    // }
+
+    public function showProductBySuccursale($succursaleId) {
+        $suc=Succursale::find($succursaleId);
+        if ($suc) {
+            $produits = Produit::whereHas('produits', function ($q) use ($succursaleId) {
+                $q->where('succursale_id', $succursaleId);
+            })->with(['produits', 'caracteristiques'])->get();
+            $data= ProduitResource::collection($produits);
+            return $this->formatResponse('La liste des produits trouvés dans mon succursale.', $data, true);
+        }else{
+            return $this->formatResponse('La succursale n\'existe pas .', [], false);
+        }
+        
+    }
+    
     
 }

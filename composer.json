@@ -47,12 +47,13 @@
             "@php artisan key:generate --ansi"
         ]
     },
+    
     "extra": {
         "branch-alias": {
             "dev-master": "10.x-dev"
         },
         "laravel": {
-            "dont-discover": []
+            "dont-discover": ["barryvdh/laravel-ide-helper"]
         }
     },
     "config": {
@@ -65,4 +66,6 @@
     },
     "minimum-stability": "stable",
     "prefer-stable": true
+
+    
 }

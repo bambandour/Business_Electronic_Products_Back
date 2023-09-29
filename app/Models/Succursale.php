@@ -18,7 +18,7 @@ public function relations() {
         ->withPivot('estAmis');
 }
 
- public function produits(){
+ public function succursales(){
         return $this->belongsToMany(Produit::class,'produit_succursales')
                         ->withPivot('quantite','prix','prixEnGros');
 }
@@ -31,27 +31,29 @@ public function scopeByProductCode(Builder $builder, $code){
 
 public static function mesAmis($id)
     {
-        return  DB::table('relations')->where('estAmis', 1)
+        return  DB::table('relations')
             ->where('succursale_id', $id)
             ->orWhere('demandeur_id', $id)
+            ->where('estAmis', 1)
             ->get();
     }
 
-    public function scopeMyFriends(Builder $builder , $id){
-
-        return  $builder->from('relations')->where('estAmis' , 1)
+    public function scopeMyFriends(Builder $builder , $id)
+    {
+        return  $builder->from('relations')
         ->where('succursale_id', $id)
         ->orWhere('demandeur_id', $id)
+        ->where('estAmis' , 1)
         ->get();
     }
     public function scopeWait(Builder $builder , $id)
     {
-        return  $builder->from('amis')->where(['estAmis' => 0 , 'demandeur_id' => $id])->get();
+        return  $builder->from('relations')->where(['estAmis' => 0 , 'demandeur_id' => $id])->get();
     }
 
     public function scopeOthers(Builder $builder , $id){
         $mesAmis = $this->mesAmis($id)->pluck('id');
-        return $builder->from('produit_succursales')->whereNotIn('id' , $mesAmis);
+        return $builder->from('produits')->whereNotIn('id' , $mesAmis);
     }
 }
 

@@ -20,9 +20,11 @@ class ProduitResource extends JsonResource
             "code"=>$this->code,
             "photo"=>$this->photo,
             "description"=>$this->description,
+            "marque"=>MarqueResource::make($this->marque),
+            "categorie"=>MarqueResource::make($this->categorie),
             "caracteristiques"=>CaracteristiqueProduitResource::collection($this->caracteristiques),
             // "quantite"=>$this->produit_succursales[0]->pivot->quantite,
-            "succursales"=>ProduitSuccursaleResource::collection($this->produit_succursales),
+            "succursales"=>ProduitSuccursaleResource::collection($this->produits),
         ];
     }
 }
